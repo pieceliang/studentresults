@@ -117,14 +117,25 @@ export default function StudentDetail() {
       {/* Student Header Card */}
       <div className="bg-white border-2 border-emerald-100 rounded-3xl p-8 shadow-[0_8px_24px_rgba(167,243,208,0.4)] print-card">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-emerald-300 to-emerald-500 rounded-3xl flex items-center justify-center text-5xl shadow-lg shrink-0">
-            {overallInfo.emoji}
+          <div className="w-24 h-24 rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-300 to-emerald-500 flex items-center justify-center shadow-lg shrink-0">
+            {student.profile_picture ? (
+              <img src={student.profile_picture} alt={student.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-5xl">{overallInfo.emoji}</span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-3xl font-black text-emerald-900" data-testid="student-name">
               {student.name}
             </h1>
-            <p className="text-emerald-600 font-semibold text-lg">{student.standard}</p>
+            <div className="flex items-center gap-2 flex-wrap mt-1">
+              <span className="text-emerald-600 font-semibold text-lg">{student.standard}</span>
+              {student.exam_type && (
+                <span className="text-sm font-bold bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full" data-testid="exam-type-badge">
+                  {student.exam_type}
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap gap-3 mt-3">
               <div className="bg-emerald-50 rounded-2xl px-4 py-2">
                 <span className="text-2xl font-black text-emerald-700" data-testid="overall-pct">
@@ -264,7 +275,7 @@ export default function StudentDetail() {
           <div className="text-6xl mb-4">📋</div>
           <p className="text-emerald-600 font-semibold">No subjects added yet.</p>
           <button
-            onClick={() => setShowEdit(true)}
+            onClick={() => { playOpen(); setShowEdit(true); }}
             className="mt-4 bg-emerald-400 text-white font-bold px-6 py-2 rounded-full hover:bg-emerald-500 transition-colors"
             data-testid="add-subjects-btn"
           >
@@ -272,6 +283,88 @@ export default function StudentDetail() {
           </button>
         </div>
       )}
+
+      {/* Print Slip — hidden on screen, shown only when printing */}
+      <div className="print-only" data-testid="print-slip">
+        <div className="border-4 border-emerald-300 rounded-2xl overflow-hidden font-sans">
+          {/* Header */}
+          <div className="bg-emerald-500 text-white text-center py-5">
+            <div className="font-black text-2xl tracking-wide">ResultsHub</div>
+            <div className="font-bold text-base opacity-90">Student Result Slip</div>
+          </div>
+
+          {/* Student Info */}
+          <div className="bg-emerald-50 px-6 py-4 flex gap-5 items-center border-b-2 border-emerald-200">
+            <div className="w-20 h-20 rounded-xl overflow-hidden bg-emerald-200 shrink-0 flex items-center justify-center">
+              {student.profile_picture ? (
+                <img src={student.profile_picture} alt={student.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-3xl">👤</span>
+              )}
+            </div>
+            <div>
+              <div className="text-xl font-black text-emerald-900">{student.name}</div>
+              <div className="text-emerald-700 font-bold">{student.standard}</div>
+              {student.exam_type && <div className="text-emerald-600 font-semibold">Exam: {student.exam_type}</div>}
+              <div className="text-emerald-500 text-sm">
+                Date: {new Date().toLocaleDateString("en-MY", { year: "numeric", month: "long", day: "numeric" })}
+              </div>
+            </div>
+          </div>
+
+          {/* Subjects Table */}
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-emerald-100">
+                {["Subject", "Marks", "Max", "%", "Grade"].map((h) => (
+                  <th key={h} className="px-4 py-2.5 text-emerald-800 font-black border-b-2 border-emerald-200 text-left first:text-left text-center">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {student.subjects.map((s, i) => {
+                const pct = Math.round((s.marks / s.max_marks) * 1000) / 10;
+                const { grade } = getGradeInfo(s.marks, s.max_marks);
+                return (
+                  <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-emerald-50/40"}>
+                    <td className="px-4 py-2.5 font-bold text-emerald-900 border-b border-emerald-100">{s.name}</td>
+                    <td className="px-4 py-2.5 text-center font-bold text-emerald-800 border-b border-emerald-100">{s.marks}</td>
+                    <td className="px-4 py-2.5 text-center text-emerald-500 border-b border-emerald-100">{s.max_marks}</td>
+                    <td className="px-4 py-2.5 text-center font-bold text-emerald-700 border-b border-emerald-100">{pct}%</td>
+                    <td className="px-4 py-2.5 text-center font-black text-emerald-800 border-b border-emerald-100">{grade}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* Summary */}
+          <div className="bg-emerald-50 px-6 py-4 flex justify-between items-center border-t-2 border-emerald-200">
+            <div>
+              <div className="font-bold text-emerald-700">Total Marks: {totalMarks} / {totalMax}</div>
+              <div className="font-bold text-emerald-700">Average: {overallPct}%</div>
+            </div>
+            <div className="text-right">
+              <div className="text-4xl font-black text-emerald-800">{overallInfo.grade}</div>
+              <div className="text-xs font-bold text-emerald-500 uppercase tracking-wide">Overall Grade</div>
+            </div>
+          </div>
+
+          {/* Signatures */}
+          <div className="px-8 py-5 flex justify-between border-t border-emerald-100 bg-white">
+            <div className="text-center">
+              <div className="h-10 border-b-2 border-emerald-300 w-36 mb-1"></div>
+              <div className="text-xs text-emerald-500 font-semibold">Teacher's Signature</div>
+            </div>
+            <div className="text-center">
+              <div className="h-10 border-b-2 border-emerald-300 w-36 mb-1"></div>
+              <div className="text-xs text-emerald-500 font-semibold">Parent's Signature</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Delete Confirm */}
       {showDeleteConfirm && (

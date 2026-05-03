@@ -157,10 +157,23 @@ export default function StudentList() {
                 className="bg-white border-2 border-emerald-100 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-4"
                 data-testid={`student-card-${student.id}`}
               >
-                <div className="text-4xl">{emoji}</div>
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-emerald-100 border-2 border-emerald-200 flex items-center justify-center shrink-0">
+                {student.profile_picture ? (
+                  <img src={student.profile_picture} alt={student.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl">{emoji}</span>
+                )}
+              </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-black text-emerald-900 text-lg truncate">{student.name}</div>
-                  <div className="text-sm text-emerald-600 font-semibold">{student.standard}</div>
+                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                    <span className="text-sm text-emerald-600 font-semibold">{student.standard}</span>
+                    {student.exam_type && student.exam_type !== "General" && (
+                      <span className="text-xs font-bold bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
+                        {student.exam_type}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-sm text-emerald-400">{student.subjects?.length ?? 0} subjects</div>
                 </div>
                 <div className="text-right mr-2 hidden sm:block">

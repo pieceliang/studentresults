@@ -38,7 +38,9 @@ class Subject(BaseModel):
 class StudentBase(BaseModel):
     name: str
     standard: str
-    roll_number: str
+    roll_number: str = "-"
+    exam_type: str = "General"
+    profile_picture: str = ""
     subjects: List[Subject] = []
 
 
@@ -54,7 +56,9 @@ class StudentResponse(BaseModel):
     id: str
     name: str
     standard: str
-    roll_number: str
+    roll_number: str = "-"
+    exam_type: str = "General"
+    profile_picture: str = ""
     subjects: List[Subject] = []
     created_at: datetime
     updated_at: datetime
@@ -65,7 +69,9 @@ class StudentResponse(BaseModel):
             id=str(doc['_id']),
             name=doc['name'],
             standard=doc['standard'],
-            roll_number=doc['roll_number'],
+            roll_number=doc.get('roll_number', '-'),
+            exam_type=doc.get('exam_type', 'General'),
+            profile_picture=doc.get('profile_picture', ''),
             subjects=doc.get('subjects', []),
             created_at=doc['created_at'],
             updated_at=doc['updated_at']
@@ -105,7 +111,8 @@ async def get_stats():
             'id': str(s['_id']),
             'name': s['name'],
             'standard': s['standard'],
-            'roll_number': s['roll_number'],
+            'exam_type': s.get('exam_type', 'General'),
+            'profile_picture': s.get('profile_picture', ''),
             'average': round(avg, 1),
             'subjects_count': len(s.get('subjects', [])),
             'created_at': s.get('created_at')
@@ -132,13 +139,13 @@ async def export_csv(standard: Optional[str] = Query(None)):
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['Student Name', 'Standard', 'Subject', 'Marks', 'Max Marks', 'Percentage', 'Grade'])
+    writer.writerow(['Student Name', 'Standard', 'Exam Type', 'Subject', 'Marks', 'Max Marks', 'Percentage', 'Grade'])
 
     for s in students:
         for sub in s.get('subjects', []):
             pct = round(sub['marks'] / sub['max_marks'] * 100, 1)
             grade = get_grade(pct)
-            writer.writerow([s['name'], s['standard'], sub['name'], sub['marks'], sub['max_marks'], f"{pct}%", grade])
+            writer.writerow([s['name'], s['standard'], s.get('exam_type', 'General'), sub['name'], sub['marks'], sub['max_marks'], f"{pct}%", grade])
 
     output.seek(0)
     return StreamingResponse(
