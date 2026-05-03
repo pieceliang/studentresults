@@ -1,0 +1,86 @@
+{
+  "theme": "light",
+  "archetype": "6 (Vibrant Play)",
+  "emotional_tone": "Playful, friendly, encouraging, and approachable. Reduces the anxiety of 'results' and 'grading'.",
+  "color_palette": {
+    "background": "#FDFBF7",
+    "surface": "#FFFFFF",
+    "primary": "#4ADE80",
+    "primary_hover": "#22C55E",
+    "secondary": "#FEF08A",
+    "accent": "#A7F3D0",
+    "text_primary": "#064E3B",
+    "text_secondary": "#047857",
+    "border": "#D1FAE5",
+    "danger": "#FDA4AF",
+    "danger_text": "#9F1239"
+  },
+  "typography": {
+    "font_family": "Nunito, sans-serif",
+    "headings": {
+      "h1": "text-4xl sm:text-5xl font-black tracking-tight text-emerald-900",
+      "h2": "text-2xl sm:text-3xl font-bold tracking-tight text-emerald-900",
+      "h3": "text-xl sm:text-2xl font-bold text-emerald-800",
+      "h4": "text-lg sm:text-xl font-bold text-emerald-800"
+    },
+    "body": "text-base text-emerald-800",
+    "labels": "text-sm font-bold uppercase tracking-widest text-emerald-600"
+  },
+  "spacing_and_layout": {
+    "container_padding": "p-6 md:p-12",
+    "gap": "gap-6 md:gap-8",
+    "border_radius": {
+      "cards": "rounded-3xl",
+      "buttons": "rounded-full",
+      "inputs": "rounded-2xl",
+      "badges": "rounded-full"
+    }
+  },
+  "surface_strategies": {
+    "cards": "bg-white border-2 border-emerald-100 shadow-[0_8px_24px_rgba(167,243,208,0.4)] hover:shadow-[0_12px_32px_rgba(167,243,208,0.6)] transition-all duration-300",
+    "buttons_primary": "bg-emerald-400 text-emerald-950 font-bold hover:bg-emerald-500 shadow-[0_4px_14px_rgba(52,211,153,0.4)] hover:-translate-y-1 transition-transform",
+    "buttons_secondary": "bg-emerald-100 text-emerald-800 font-bold hover:bg-emerald-200 transition-colors",
+    "inputs": "bg-emerald-50/50 border-2 border-emerald-100 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/20 text-emerald-900 outline-none h-12 px-4"
+  },
+  "iconography": {
+    "library": "lucide-react",
+    "style": "stroke-width: 2.5, soft, rounded edges",
+    "usage": "Use emojis heavily in the UI to make it cute (e.g., 🎒, 📚, 🍏, 🌟, 🏆, 📝)"
+  },
+  "images_and_media": {
+    "hero_background": "https://images.unsplash.com/photo-1613408181923-f058a1b0e00c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTZ8MHwxfHNlYXJjaHwyfHxjdXRlJTIwZ3JlZW4lMjBpbGx1c3RyYXRpb24lMjBsZWF2ZXN8ZW58MHx8fHwxNzc3ODMzNDQwfDA&ixlib=rb-4.1.0&q=85",
+    "student_placeholder": "https://images.unsplash.com/photo-1753454974820-bf2fddebe100?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwc3R1ZHlpbmclMjBoYXBweSUyMGdyZWVufGVufDB8fHx8MTc3NzgzMzQ0MHww&ixlib=rb-4.1.0&q=85",
+    "instructions": "Use these images for background patterns or placeholders if needed. Do not use generic grey boxes."
+  },
+  "pages": {
+    "Dashboard": {
+      "layout": "Grid layout. Top section uses 3 big summary bento-cards (Total Students, Average Score, Top Performers). Use emojis in titles.",
+      "style": "Header section should feel welcoming, perhaps with the 'hero_background' as a very subtle faded overlay."
+    },
+    "Students_List": {
+      "layout": "Searchable data display. Instead of strict enterprise tables, use a bento-grid of student cards OR a very soft table with alternating green-tinted rows and rounded corners.",
+      "interactions": "Hover states on rows/cards should slightly lift them."
+    },
+    "Add_Edit_Form": {
+      "layout": "Floating modal/card with soft UI. Generous padding (p-8).",
+      "style": "Big bold labels. For subjects, use a 2-column grid layout for inputs so it doesn't feel overwhelmingly long."
+    },
+    "Student_Detail": {
+      "layout": "Hero section showing student info (Avatar, Name, Standard). Followed by a responsive grid of subject cards showing marks and a dynamic grade-based emoji."
+    }
+  },
+  "component_overrides": {
+    "shadcn_card": "Override default rounded-xl to rounded-3xl. Add border-emerald-100. Apply soft green shadows.",
+    "shadcn_button": "Override rounded-md to rounded-full. Increase font-weight to bold. Add hover bounce (-translate-y-1).",
+    "shadcn_input": "Override to rounded-2xl, h-12, bg-emerald-50/50. No sharp corners.",
+    "shadcn_table": "Remove strict dark borders. Use soft emerald dividing lines or just background coloring for rows."
+  },
+  "instructions_to_main_agent": [
+    "Install Google Font 'Nunito' and set it as the sans font family in tailwind.config.",
+    "All interactive and key informational elements MUST include a data-testid attribute in kebab-case.",
+    "Do not use dark tech-mint themes. The background is cream (#FDFBF7), primary is vibrant green (#4ADE80).",
+    "Replace standard dashboard seriousness with cute emojis and generous padding (p-6 to p-8 inside cards).",
+    "Export functionality (PDF/CSV) buttons should be prominent and styled playfully.",
+    "There is no auth, just UI toggles or separate views if needed for Teacher vs Student view, or simply open access. Treat everyone as having access."
+  ]
+}
