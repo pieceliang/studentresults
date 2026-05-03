@@ -173,8 +173,14 @@ export default function StudentList() {
                         {student.exam_type}
                       </span>
                     )}
+                    {student.gender && (
+                      <span className="text-xs font-bold text-emerald-500">
+                        {student.gender === "Male" ? "♂" : "♀"} {student.gender}
+                      </span>
+                    )}
                   </div>
-                  <div className="text-sm text-emerald-400">{student.subjects?.length ?? 0} subjects</div>
+                  <div className="text-sm text-emerald-400">
+                    {student.school ? `${student.school} · ` : ""}{student.subjects?.length ?? 0} subjects</div>
                 </div>
                 <div className="text-right mr-2 hidden sm:block">
                   <div className={`text-2xl font-black ${color}`}>

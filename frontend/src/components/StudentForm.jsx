@@ -11,6 +11,8 @@ const STANDARDS = [
   "Form 1", "Form 2", "Form 3", "Form 4", "Form 5",
 ];
 
+const SCHOOLS = ["SJKC Yu Hua", "SJKC Sin Ming", "SJKC Bandar Kajang 2", "Others"];
+
 const EXAM_TYPES = ["General", "Mid-term", "Final", "Monthly", "Pre-test", "Post-test"];
 
 const FIXED_SUBJECTS = ["BC", "EN", "BM", "MM", "SN"];
@@ -51,6 +53,8 @@ export default function StudentForm({ student, onClose }) {
   const [name, setName] = useState(student?.name || "");
   const [standard, setStandard] = useState(student?.standard || "");
   const [examType, setExamType] = useState(student?.exam_type || "General");
+  const [gender, setGender] = useState(student?.gender || "");
+  const [school, setSchool] = useState(student?.school || "");
   const [marks, setMarks] = useState(() => initMarks(student?.subjects));
   const [extraSubjects, setExtraSubjects] = useState(() => initExtra(student?.subjects));
   const [profilePic, setProfilePic] = useState(student?.profile_picture || "");
@@ -105,6 +109,8 @@ export default function StudentForm({ student, onClose }) {
         name: name.trim(),
         standard: standard.trim(),
         exam_type: examType,
+        gender,
+        school,
         roll_number: "-",
         profile_picture: profilePic,
         subjects: [
@@ -214,6 +220,46 @@ export default function StudentForm({ student, onClose }) {
               <datalist id="standards-list">
                 {STANDARDS.map((s) => <option key={s} value={s} />)}
               </datalist>
+            </div>
+          </div>
+
+          {/* Gender + School */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-bold uppercase tracking-widest text-emerald-600 block mb-2">
+                Gender
+              </label>
+              <div className="flex gap-2">
+                {["Male", "Female"].map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGender(gender === g ? "" : g)}
+                    className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all ${
+                      gender === g
+                        ? "bg-emerald-400 text-white shadow-sm"
+                        : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                    }`}
+                    data-testid={`gender-${g.toLowerCase()}`}
+                  >
+                    {g === "Male" ? "♂ Male" : "♀ Female"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-bold uppercase tracking-widest text-emerald-600 block mb-2">
+                School
+              </label>
+              <select
+                value={school}
+                onChange={(e) => setSchool(e.target.value)}
+                className="w-full bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl h-12 px-4 text-emerald-900 focus:outline-none focus:border-emerald-400 font-medium cursor-pointer"
+                data-testid="student-school-select"
+              >
+                <option value="">Select school...</option>
+                {SCHOOLS.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
             </div>
           </div>
 

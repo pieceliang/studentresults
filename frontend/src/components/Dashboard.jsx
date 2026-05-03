@@ -39,12 +39,19 @@ export default function Dashboard() {
     <div className="space-y-8 fade-in-up">
       {/* Hero Header */}
       <div className="text-center py-10 bg-white rounded-3xl border-2 border-emerald-100 shadow-[0_8px_24px_rgba(167,243,208,0.4)] px-6">
-        <div className="text-6xl mb-4">🎒</div>
-        <h1 className="text-4xl sm:text-5xl font-black text-emerald-900 mb-3">
-          Welcome to ResultsHub!
+        <div className="flex justify-center mb-4">
+          <img
+            src="https://customer-assets.emergentagent.com/job_marks-manager-16/artifacts/36kuzbbs_VSS%20logo%20vertical_Black.png"
+            alt="VSS Logo"
+            className="h-20 w-20 object-contain bg-gray-900 rounded-2xl p-1"
+          />
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-emerald-900 mb-1">
+          VSchool Smart Centre
         </h1>
-        <p className="text-lg text-emerald-600 font-semibold max-w-xl mx-auto">
-          Track, manage, and celebrate every student's achievement
+        <p className="text-base font-bold text-emerald-600 mb-1">Bandar Tek Kajang</p>
+        <p className="text-base text-emerald-500 font-semibold max-w-xl mx-auto">
+          Student Result Management System
         </p>
         <Link
           to="/students"

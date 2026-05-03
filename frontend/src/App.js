@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Dashboard from "@/components/Dashboard";
 import StudentList from "@/components/StudentList";
 import StudentDetail from "@/components/StudentDetail";
+import ClassOverview from "@/components/ClassOverview";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/students" element={<StudentList />} />
             <Route path="/students/:id" element={<StudentDetail />} />
+            <Route path="/overview" element={<ClassOverview />} />
           </Routes>
         </main>
       </BrowserRouter>

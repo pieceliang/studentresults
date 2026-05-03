@@ -1,5 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, LayoutDashboard, Users } from "lucide-react";
+import { LayoutDashboard, Users, BarChart2 } from "lucide-react";
+
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_marks-manager-16/artifacts/36kuzbbs_VSS%20logo%20vertical_Black.png";
 
 export default function Navbar() {
   const location = useLocation();
@@ -10,20 +12,23 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white border-b-2 border-emerald-100 shadow-sm no-print sticky top-0 z-40">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-emerald-800 font-black text-xl hover:text-emerald-600 transition-colors"
-          data-testid="nav-logo"
-        >
-          <BookOpen size={24} className="text-emerald-500" />
-          <span>ResultsHub</span>
+      <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
+        {/* Logo + Title */}
+        <Link to="/" className="flex items-center gap-3 shrink-0" data-testid="nav-logo">
+          <div className="bg-gray-900 rounded-xl overflow-hidden w-11 h-11 flex items-center justify-center shrink-0">
+            <img src={LOGO_URL} alt="VSS Logo" className="w-full h-full object-contain" />
+          </div>
+          <div className="hidden sm:block leading-tight">
+            <div className="font-black text-emerald-800 text-base leading-tight">VSchool Smart Centre</div>
+            <div className="text-xs font-bold text-emerald-500">Bandar Tek Kajang</div>
+          </div>
         </Link>
 
-        <div className="flex gap-2">
+        {/* Nav Links */}
+        <div className="flex gap-1.5">
           <Link
             to="/"
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm transition-all ${active("/")}`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-full font-bold text-sm transition-all ${active("/")}`}
             data-testid="nav-dashboard"
           >
             <LayoutDashboard size={16} />
@@ -31,11 +36,19 @@ export default function Navbar() {
           </Link>
           <Link
             to="/students"
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm transition-all ${active("/students")}`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-full font-bold text-sm transition-all ${active("/students")}`}
             data-testid="nav-students"
           >
             <Users size={16} />
             <span className="hidden sm:inline">Students</span>
+          </Link>
+          <Link
+            to="/overview"
+            className={`flex items-center gap-2 px-3 py-2 rounded-full font-bold text-sm transition-all ${active("/overview")}`}
+            data-testid="nav-overview"
+          >
+            <BarChart2 size={16} />
+            <span className="hidden sm:inline">Overview</span>
           </Link>
         </div>
       </div>

@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import StudentForm from "./StudentForm";
+import ProgressTracker from "./ProgressTracker";
 import { playDelete, playOpen, playSuccess } from "@/utils/sounds";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -136,6 +137,20 @@ export default function StudentDetail() {
                 </span>
               )}
             </div>
+            {(student.gender || student.school) && (
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
+                {student.gender && (
+                  <span className="text-sm font-bold text-emerald-500" data-testid="student-gender">
+                    {student.gender === "Male" ? "♂" : "♀"} {student.gender}
+                  </span>
+                )}
+                {student.school && (
+                  <span className="text-sm font-semibold text-emerald-500" data-testid="student-school">
+                    {student.school}
+                  </span>
+                )}
+              </div>
+            )}
             <div className="flex flex-wrap gap-3 mt-3">
               <div className="bg-emerald-50 rounded-2xl px-4 py-2">
                 <span className="text-2xl font-black text-emerald-700" data-testid="overall-pct">
@@ -284,13 +299,21 @@ export default function StudentDetail() {
         </div>
       )}
 
+      {/* Progress Tracker — shows when student has multiple exam records */}
+      <ProgressTracker studentName={student.name} school={student.school} />
+
       {/* Print Slip — hidden on screen, shown only when printing */}
       <div className="print-only" data-testid="print-slip">
         <div className="border-4 border-emerald-300 rounded-2xl overflow-hidden font-sans">
           {/* Header */}
-          <div className="bg-emerald-500 text-white text-center py-5">
-            <div className="font-black text-2xl tracking-wide">ResultsHub</div>
-            <div className="font-bold text-base opacity-90">Student Result Slip</div>
+          <div className="bg-emerald-500 text-white text-center py-5 flex items-center justify-center gap-4">
+            <div className="bg-white rounded-lg p-1 w-10 h-10 flex items-center justify-center shrink-0">
+              <img src="https://customer-assets.emergentagent.com/job_marks-manager-16/artifacts/36kuzbbs_VSS%20logo%20vertical_Black.png" alt="VSS" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <div className="font-black text-xl tracking-wide">VSchool Smart Centre</div>
+              <div className="font-bold text-sm opacity-90">Bandar Tek Kajang — Student Result Slip</div>
+            </div>
           </div>
 
           {/* Student Info */}
@@ -305,9 +328,13 @@ export default function StudentDetail() {
             <div>
               <div className="text-xl font-black text-emerald-900">{student.name}</div>
               <div className="text-emerald-700 font-bold">{student.standard}</div>
-              {student.exam_type && <div className="text-emerald-600 font-semibold">Exam: {student.exam_type}</div>}
-              <div className="text-emerald-500 text-sm">
-                Date: {new Date().toLocaleDateString("en-MY", { year: "numeric", month: "long", day: "numeric" })}
+              {student.school && <div className="text-emerald-600 font-semibold">{student.school}</div>}
+              <div className="flex gap-3 mt-0.5">
+                {student.gender && <div className="text-emerald-500 text-sm font-semibold">{student.gender === "Male" ? "♂" : "♀"} {student.gender}</div>}
+                {student.exam_type && <div className="text-emerald-600 text-sm font-semibold">Exam: {student.exam_type}</div>}
+              </div>
+              <div className="text-emerald-400 text-xs mt-1">
+                {new Date().toLocaleDateString("en-MY", { year: "numeric", month: "long", day: "numeric" })}
               </div>
             </div>
           </div>

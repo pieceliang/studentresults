@@ -40,6 +40,8 @@ class StudentBase(BaseModel):
     standard: str
     roll_number: str = "-"
     exam_type: str = "General"
+    gender: str = ""
+    school: str = ""
     profile_picture: str = ""
     subjects: List[Subject] = []
 
@@ -58,6 +60,8 @@ class StudentResponse(BaseModel):
     standard: str
     roll_number: str = "-"
     exam_type: str = "General"
+    gender: str = ""
+    school: str = ""
     profile_picture: str = ""
     subjects: List[Subject] = []
     created_at: datetime
@@ -71,6 +75,8 @@ class StudentResponse(BaseModel):
             standard=doc['standard'],
             roll_number=doc.get('roll_number', '-'),
             exam_type=doc.get('exam_type', 'General'),
+            gender=doc.get('gender', ''),
+            school=doc.get('school', ''),
             profile_picture=doc.get('profile_picture', ''),
             subjects=doc.get('subjects', []),
             created_at=doc['created_at'],
@@ -139,13 +145,13 @@ async def export_csv(standard: Optional[str] = Query(None)):
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['Student Name', 'Standard', 'Exam Type', 'Subject', 'Marks', 'Max Marks', 'Percentage', 'Grade'])
+    writer.writerow(['Student Name', 'Gender', 'School', 'Standard', 'Exam Type', 'Subject', 'Marks', 'Max Marks', 'Percentage', 'Grade'])
 
     for s in students:
         for sub in s.get('subjects', []):
             pct = round(sub['marks'] / sub['max_marks'] * 100, 1)
             grade = get_grade(pct)
-            writer.writerow([s['name'], s['standard'], s.get('exam_type', 'General'), sub['name'], sub['marks'], sub['max_marks'], f"{pct}%", grade])
+            writer.writerow([s['name'], s.get('gender', ''), s.get('school', ''), s['standard'], s.get('exam_type', 'General'), sub['name'], sub['marks'], sub['max_marks'], f"{pct}%", grade])
 
     output.seek(0)
     return StreamingResponse(
@@ -153,6 +159,19 @@ async def export_csv(standard: Optional[str] = Query(None)):
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=student_results.csv"}
     )
+
+
+@api_router.get("/progress")
+async def get_progress(
+    name: str = Query(...),
+    school: Optional[str] = Query(None)
+):
+    import re
+    query = {"name": {"$regex": f"^{re.escape(name)}$", "$options": "i"}}
+    if school:
+        query["school"] = school
+    students = await db.students.find(query).sort("created_at", 1).to_list(100)
+    return [StudentResponse.from_mongo(s) for s in students]
 
 
 @api_router.get("/standards")
