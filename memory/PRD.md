@@ -19,14 +19,35 @@
 ## What's Been Implemented (as of Feb 2026)
 
 ### Backend (server.py)
-- `GET /api/stats` - Dashboard stats (total students, avg score, top performers, recent)
-- `GET /api/students` - List all students (search by name, filter by standard)
-- `POST /api/students` - Create new student
-- `GET /api/students/{id}` - Get student detail
-- `PUT /api/students/{id}` - Update student
-- `DELETE /api/students/{id}` - Delete student
-- `GET /api/students/export/csv` - Export all students to CSV (includes Exam Type column)
-- `GET /api/standards` - Get list of unique standards in DB
+- `GET /api/stats` - Dashboard stats
+- `GET /api/students` - List (search by name, filter by standard)
+- `POST /api/students` - Create student
+- `GET /api/students/{id}` - Get detail
+- `PUT /api/students/{id}` - Update
+- `DELETE /api/students/{id}` - Delete
+- `GET /api/students/export/csv` - Export CSV (includes Gender, School, Exam Type columns)
+- `GET /api/standards` - Unique standards list
+- `GET /api/progress?name=&school=` - All records for a student (for progress tracking)
+
+### Student Data Model Fields
+- `name`, `standard`, `exam_type`, `gender`, `school`, `profile_picture`, `subjects[]`, `roll_number`="-"
+
+### Frontend Pages
+- **/** Dashboard — VSchool Smart Centre branding, stats, top performers, recent students
+- **/students** — Searchable list with profile pic, exam type badge, gender, school
+- **/students/:id** — Full detail with subject cards, bar chart, progress tracker, print slip
+- **/overview** — Class overview comparison table (all students in a standard side-by-side)
+
+### Components
+- **Navbar** — VSS logo + "VSchool Smart Centre / Bandar Tek Kajang" + 3 nav links
+- **StudentForm** — Profile pic upload, Name, Standard, Gender (Male/Female), School dropdown, Exam Type pills, 5 fixed subjects + Add Other Subject
+- **ClassOverview** — Standard filter + Exam type filter, color-coded comparison table with Class Avg row
+- **ProgressTracker** — Line chart (recharts) showing subject improvement across exam types; auto-appears when ≥2 records with different exam_types exist for same student name
+- **PrintSlip** — VSchool branded result slip (hidden on screen, visible on print)
+- **sounds.js** — Web Audio API sounds (success, delete, open, click, error)
+
+### Schools configured
+- SJKC Yu Hua, SJKC Sin Ming, SJKC Bandar Kajang 2, Others
 
 ### Student Data Model Fields
 - `name` - Student full name
