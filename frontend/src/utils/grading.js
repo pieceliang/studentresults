@@ -43,9 +43,11 @@ export const GRADE_SCALE = [
 
 const fallback = GRADE_SCALE[GRADE_SCALE.length - 1];
 
+// Threshold-based: pct >= 82 → A, >=66 → B, >=50 → C, >=35 → D, >=20 → E, else F
+// (uses inclusive lower bound so floats like 81.6 still map cleanly to B, not fall through)
 export const getGradeByPct = (pct) => {
   if (pct === null || pct === undefined || isNaN(pct)) return fallback;
-  return GRADE_SCALE.find((g) => pct >= g.min && pct <= g.max) || fallback;
+  return GRADE_SCALE.find((g) => pct >= g.min) || fallback;
 };
 
 export const getGradeInfo = (marks, maxMarks = 100) => {
