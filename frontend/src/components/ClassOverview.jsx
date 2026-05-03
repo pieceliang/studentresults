@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { getGradeByPct } from "@/utils/grading";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -8,14 +9,9 @@ const SUBJECTS_ORDER = ["BC", "EN", "BM", "MM", "SN"];
 const EXAM_TYPES = ["General", "Pre-test", "Monthly", "Mid-term", "Final", "Post-test"];
 
 const cellStyle = (pct) => {
-  if (pct === null) return "bg-gray-50 text-gray-300";
-  if (pct >= 90) return "bg-emerald-100 text-emerald-800";
-  if (pct >= 80) return "bg-green-100 text-green-800";
-  if (pct >= 70) return "bg-lime-100 text-lime-800";
-  if (pct >= 60) return "bg-yellow-100 text-yellow-800";
-  if (pct >= 50) return "bg-orange-100 text-orange-800";
-  if (pct >= 40) return "bg-amber-100 text-amber-800";
-  return "bg-red-100 text-red-800";
+  if (pct === null || pct === undefined) return "bg-gray-50 text-gray-300";
+  const g = getGradeByPct(pct);
+  return `${g.bg} ${g.text}`;
 };
 
 const getSubjectPct = (student, name) => {
@@ -34,6 +30,7 @@ export default function ClassOverview() {
   const [standards, setStandards] = useState([]);
   const [selectedStandard, setSelectedStandard] = useState("");
   const [examFilter, setExamFilter] = useState("");
+  const [schoolFilter, setSchoolFilter] = useState("");
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -46,11 +43,23 @@ export default function ClassOverview() {
     setLoading(true);
     axios.get(`${API}/students`, { params: { standard: selectedStandard } })
       .then((r) => {
-        const filtered = examFilter ? r.data.filter((s) => s.exam_type === examFilter) : r.data;
+        let filtered = r.data;
+        if (examFilter) filtered = filtered.filter((s) => s.exam_type === examFilter);
+        if (schoolFilter) filtered = filtered.filter((s) => (s.school || "") === schoolFilter);
         setStudents(filtered);
       })
       .finally(() => setLoading(false));
-  }, [selectedStandard, examFilter]);
+  }, [selectedStandard, examFilter, schoolFilter]);
+
+  // Unique schools present in the current standard for the school filter dropdown
+  const [schoolOptions, setSchoolOptions] = useState([]);
+  useEffect(() => {
+    if (!selectedStandard) { setSchoolOptions([]); return; }
+    axios.get(`${API}/students`, { params: { standard: selectedStandard } }).then((r) => {
+      const opts = Array.from(new Set(r.data.map((s) => s.school).filter(Boolean))).sort();
+      setSchoolOptions(opts);
+    });
+  }, [selectedStandard]);
 
   // Build ordered subject list: fixed first, then extras
   const allSubjects = [...new Set(students.flatMap((s) => s.subjects.map((sub) => sub.name)))];
@@ -73,7 +82,7 @@ export default function ClassOverview() {
         <div className="flex flex-wrap gap-3">
           <select
             value={selectedStandard}
-            onChange={(e) => { setSelectedStandard(e.target.value); setExamFilter(""); }}
+            onChange={(e) => { setSelectedStandard(e.target.value); setExamFilter(""); setSchoolFilter(""); }}
             className="bg-white border-2 border-emerald-100 rounded-2xl h-12 px-4 text-emerald-900 focus:outline-none focus:border-emerald-400 font-medium cursor-pointer"
             data-testid="overview-standard-filter"
           >
@@ -90,6 +99,18 @@ export default function ClassOverview() {
             >
               <option value="">All Exams</option>
               {EXAM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          )}
+
+          {selectedStandard && schoolOptions.length > 0 && (
+            <select
+              value={schoolFilter}
+              onChange={(e) => setSchoolFilter(e.target.value)}
+              className="bg-white border-2 border-emerald-100 rounded-2xl h-12 px-4 text-emerald-900 focus:outline-none focus:border-emerald-400 font-medium cursor-pointer"
+              data-testid="overview-school-filter"
+            >
+              <option value="">All Schools</option>
+              {schoolOptions.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           )}
         </div>
@@ -111,7 +132,7 @@ export default function ClassOverview() {
       {selectedStandard && !loading && students.length === 0 && (
         <div className="text-center py-16 bg-white rounded-3xl border-2 border-emerald-100">
           <div className="text-6xl mb-4">🔍</div>
-          <p className="text-emerald-600 font-semibold">No students found for {selectedStandard}{examFilter ? ` · ${examFilter}` : ""}.</p>
+          <p className="text-emerald-600 font-semibold">No students found for {selectedStandard}{examFilter ? ` · ${examFilter}` : ""}{schoolFilter ? ` · ${schoolFilter}` : ""}.</p>
         </div>
       )}
 
@@ -124,6 +145,7 @@ export default function ClassOverview() {
               <p className="text-sm text-emerald-500 font-semibold">
                 {students.length} student{students.length !== 1 ? "s" : ""}
                 {examFilter ? ` · ${examFilter}` : " · All Exams"}
+                {schoolFilter ? ` · ${schoolFilter}` : ""}
               </p>
             </div>
           </div>

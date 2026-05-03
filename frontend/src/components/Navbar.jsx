@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, BarChart2 } from "lucide-react";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_marks-manager-16/artifacts/36kuzbbs_VSS%20logo%20vertical_Black.png";
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_marks-manager-16/artifacts/kn6egpfc_11%20%282048px%29%20%281%29.png";
 
 export default function Navbar() {
   const location = useLocation();

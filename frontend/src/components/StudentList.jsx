@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { Search, Plus, Download, Edit2, Trash2, ChevronRight } from "lucide-react";
+import { Search, Plus, Download, Upload, Edit2, Trash2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import StudentForm from "./StudentForm";
+import BatchImport from "./BatchImport";
 import { playDelete, playOpen, playClick } from "@/utils/sounds";
+import { getGradeByPct } from "@/utils/grading";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -12,13 +14,8 @@ const gradeFromSubjects = (subjects) => {
   if (!subjects?.length) return { grade: "-", emoji: "📋", avg: 0, color: "text-emerald-500" };
   const avg = subjects.reduce((acc, s) => acc + (s.marks / s.max_marks) * 100, 0) / subjects.length;
   const rounded = Math.round(avg * 10) / 10;
-  if (avg >= 90) return { grade: "A+", emoji: "🌟", avg: rounded, color: "text-emerald-700" };
-  if (avg >= 80) return { grade: "A", emoji: "⭐", avg: rounded, color: "text-green-600" };
-  if (avg >= 70) return { grade: "B+", emoji: "🎯", avg: rounded, color: "text-lime-600" };
-  if (avg >= 60) return { grade: "B", emoji: "👍", avg: rounded, color: "text-yellow-600" };
-  if (avg >= 50) return { grade: "C", emoji: "📖", avg: rounded, color: "text-orange-500" };
-  if (avg >= 40) return { grade: "D", emoji: "⚠️", avg: rounded, color: "text-amber-500" };
-  return { grade: "F", emoji: "😰", avg: rounded, color: "text-red-500" };
+  const g = getGradeByPct(avg);
+  return { grade: g.grade, emoji: g.emoji, avg: rounded, color: g.text };
 };
 
 export default function StudentList() {
@@ -28,6 +25,7 @@ export default function StudentList() {
   const [filterStandard, setFilterStandard] = useState("");
   const [standards, setStandards] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editStudent, setEditStudent] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
@@ -84,7 +82,14 @@ export default function StudentList() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-4xl font-black text-emerald-900">Students 🎒</h1>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
+          <button
+            onClick={() => { playOpen(); setShowImport(true); }}
+            className="flex items-center gap-2 bg-emerald-100 text-emerald-800 font-bold px-4 py-2 rounded-full hover:bg-emerald-200 transition-colors text-sm"
+            data-testid="import-csv-btn"
+          >
+            <Upload size={15} /> Import CSV
+          </button>
           <button
             onClick={handleExportCSV}
             className="flex items-center gap-2 bg-emerald-100 text-emerald-800 font-bold px-4 py-2 rounded-full hover:bg-emerald-200 transition-colors text-sm"
@@ -253,6 +258,16 @@ export default function StudentList() {
       {/* Student Form Modal */}
       {showForm && (
         <StudentForm student={editStudent} onClose={handleFormClose} />
+      )}
+
+      {/* Batch Import Modal */}
+      {showImport && (
+        <BatchImport
+          onClose={(imported) => {
+            setShowImport(false);
+            if (imported) fetchStudents();
+          }}
+        />
       )}
     </div>
   );

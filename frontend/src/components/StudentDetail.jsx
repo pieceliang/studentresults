@@ -10,19 +10,9 @@ import { toast } from "sonner";
 import StudentForm from "./StudentForm";
 import ProgressTracker from "./ProgressTracker";
 import { playDelete, playOpen, playSuccess } from "@/utils/sounds";
+import { getGradeInfo } from "@/utils/grading";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-
-const getGradeInfo = (marks, maxMarks) => {
-  const pct = (marks / maxMarks) * 100;
-  if (pct >= 90) return { grade: "A+", emoji: "🌟", color: "#4ade80", bg: "bg-emerald-100", text: "text-emerald-700" };
-  if (pct >= 80) return { grade: "A", emoji: "⭐", color: "#22c55e", bg: "bg-green-100", text: "text-green-700" };
-  if (pct >= 70) return { grade: "B+", emoji: "🎯", color: "#84cc16", bg: "bg-lime-100", text: "text-lime-700" };
-  if (pct >= 60) return { grade: "B", emoji: "👍", color: "#eab308", bg: "bg-yellow-100", text: "text-yellow-700" };
-  if (pct >= 50) return { grade: "C", emoji: "📖", color: "#f97316", bg: "bg-orange-100", text: "text-orange-700" };
-  if (pct >= 40) return { grade: "D", emoji: "⚠️", color: "#f59e0b", bg: "bg-amber-100", text: "text-amber-700" };
-  return { grade: "F", emoji: "😰", color: "#ef4444", bg: "bg-red-100", text: "text-red-700" };
-};
 
 export default function StudentDetail() {
   const { id } = useParams();
@@ -239,6 +229,14 @@ export default function StudentDetail() {
                     </span>
                   </div>
                   <div className="text-right text-sm font-bold text-emerald-400 mt-1">{pct}%</div>
+                  {subject.comment && (
+                    <p
+                      className="mt-2 text-xs italic text-emerald-600 leading-relaxed border-t border-emerald-50 pt-2"
+                      data-testid={`subject-comment-${i}`}
+                    >
+                      💬 {subject.comment}
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -308,7 +306,7 @@ export default function StudentDetail() {
           {/* Header */}
           <div className="bg-emerald-500 text-white text-center py-5 flex items-center justify-center gap-4">
             <div className="bg-white rounded-lg p-1 w-10 h-10 flex items-center justify-center shrink-0">
-              <img src="https://customer-assets.emergentagent.com/job_marks-manager-16/artifacts/36kuzbbs_VSS%20logo%20vertical_Black.png" alt="VSS" className="w-full h-full object-contain" />
+              <img src="https://customer-assets.emergentagent.com/job_marks-manager-16/artifacts/kn6egpfc_11%20%282048px%29%20%281%29.png" alt="VSS" className="w-full h-full object-contain" />
             </div>
             <div>
               <div className="font-black text-xl tracking-wide">VSchool Smart Centre</div>
@@ -356,11 +354,18 @@ export default function StudentDetail() {
                 const { grade } = getGradeInfo(s.marks, s.max_marks);
                 return (
                   <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-emerald-50/40"}>
-                    <td className="px-4 py-2.5 font-bold text-emerald-900 border-b border-emerald-100">{s.name}</td>
-                    <td className="px-4 py-2.5 text-center font-bold text-emerald-800 border-b border-emerald-100">{s.marks}</td>
-                    <td className="px-4 py-2.5 text-center text-emerald-500 border-b border-emerald-100">{s.max_marks}</td>
-                    <td className="px-4 py-2.5 text-center font-bold text-emerald-700 border-b border-emerald-100">{pct}%</td>
-                    <td className="px-4 py-2.5 text-center font-black text-emerald-800 border-b border-emerald-100">{grade}</td>
+                    <td className="px-4 py-2.5 font-bold text-emerald-900 border-b border-emerald-100 align-top">
+                      {s.name}
+                      {s.comment && (
+                        <div className="italic text-xs text-emerald-600 font-normal mt-0.5">
+                          {s.comment}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5 text-center font-bold text-emerald-800 border-b border-emerald-100 align-top">{s.marks}</td>
+                    <td className="px-4 py-2.5 text-center text-emerald-500 border-b border-emerald-100 align-top">{s.max_marks}</td>
+                    <td className="px-4 py-2.5 text-center font-bold text-emerald-700 border-b border-emerald-100 align-top">{pct}%</td>
+                    <td className="px-4 py-2.5 text-center font-black text-emerald-800 border-b border-emerald-100 align-top">{grade}</td>
                   </tr>
                 );
               })}

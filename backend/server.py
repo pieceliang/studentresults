@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Query, UploadFile, File
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -33,6 +33,7 @@ class Subject(BaseModel):
     name: str
     marks: float
     max_marks: float = 100.0
+    comment: str = ""
 
 
 class StudentBase(BaseModel):
@@ -90,11 +91,25 @@ def calc_average(subjects):
     return sum(s['marks'] / s['max_marks'] * 100 for s in subjects) / len(subjects)
 
 
-GRADE_MAP = [(90, 'A+'), (80, 'A'), (70, 'B+'), (60, 'B'), (50, 'C'), (40, 'D'), (0, 'F')]
+# VSS Custom Grading Rubric
+# 82-100 A Excellent, 66-81 B Credit, 50-65 C Good,
+# 35-49 D Satisfactory, 20-34 E Meets Min, 0-19 F Does Not Meet Min
+GRADE_SCALE = [
+    (82, 'A', 'Excellent'),
+    (66, 'B', 'Credit'),
+    (50, 'C', 'Good'),
+    (35, 'D', 'Satisfactory'),
+    (20, 'E', 'Meets Minimum Requirement'),
+    (0, 'F', 'Does Not Meet Minimum Requirement'),
+]
 
 
 def get_grade(pct):
-    return next(g for threshold, g in GRADE_MAP if pct >= threshold)
+    return next(g for threshold, g, _ in GRADE_SCALE if pct >= threshold)
+
+
+def get_grade_label(pct):
+    return next(label for threshold, _, label in GRADE_SCALE if pct >= threshold)
 
 
 @api_router.get("/")
@@ -145,13 +160,13 @@ async def export_csv(standard: Optional[str] = Query(None)):
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['Student Name', 'Gender', 'School', 'Standard', 'Exam Type', 'Subject', 'Marks', 'Max Marks', 'Percentage', 'Grade'])
+    writer.writerow(['Student Name', 'Gender', 'School', 'Standard', 'Exam Type', 'Subject', 'Marks', 'Max Marks', 'Percentage', 'Grade', 'Comment'])
 
     for s in students:
         for sub in s.get('subjects', []):
             pct = round(sub['marks'] / sub['max_marks'] * 100, 1)
             grade = get_grade(pct)
-            writer.writerow([s['name'], s.get('gender', ''), s.get('school', ''), s['standard'], s.get('exam_type', 'General'), sub['name'], sub['marks'], sub['max_marks'], f"{pct}%", grade])
+            writer.writerow([s['name'], s.get('gender', ''), s.get('school', ''), s['standard'], s.get('exam_type', 'General'), sub['name'], sub['marks'], sub['max_marks'], f"{pct}%", grade, sub.get('comment', '')])
 
     output.seek(0)
     return StreamingResponse(
@@ -159,6 +174,85 @@ async def export_csv(standard: Optional[str] = Query(None)):
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=student_results.csv"}
     )
+
+
+IMPORT_FIXED_SUBJECTS = ["BC", "EN", "BM", "MM", "SN"]
+
+
+@api_router.get("/students/import/template")
+async def download_import_template():
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['name', 'standard', 'school', 'exam_type', 'BC', 'EN', 'BM', 'MM', 'SN'])
+    writer.writerow(['Ahmad bin Ali', 'Standard 5', 'SJKC Yu Hua', 'Mid-term', 85, 72, 90, 68, 55])
+    writer.writerow(['Siti binti Osman', 'Standard 5', 'SJKC Yu Hua', 'Mid-term', 91, 88, 76, 82, 70])
+    output.seek(0)
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode()),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=import_template.csv"}
+    )
+
+
+@api_router.post("/students/import")
+async def import_students(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are supported")
+
+    content = (await file.read()).decode('utf-8-sig')
+    reader = csv.DictReader(io.StringIO(content))
+
+    required = {'name', 'standard'}
+    if not reader.fieldnames or not required.issubset({f.strip() for f in reader.fieldnames}):
+        raise HTTPException(status_code=400, detail="CSV must include at least 'name' and 'standard' columns")
+
+    imported = 0
+    errors = []
+    now = datetime.now(timezone.utc)
+
+    for idx, row in enumerate(reader, start=2):
+        row = {(k or '').strip(): (v or '').strip() for k, v in row.items()}
+        name = row.get('name', '')
+        standard = row.get('standard', '')
+
+        if not name or not standard:
+            errors.append(f"Row {idx}: missing name or standard")
+            continue
+
+        subjects = []
+        for subj in IMPORT_FIXED_SUBJECTS:
+            raw = row.get(subj, '')
+            if raw == '':
+                continue
+            try:
+                marks = float(raw)
+                if marks < 0 or marks > 100:
+                    errors.append(f"Row {idx}: {subj} marks {marks} out of range 0-100")
+                    continue
+                subjects.append({'name': subj, 'marks': marks, 'max_marks': 100.0, 'comment': ''})
+            except ValueError:
+                errors.append(f"Row {idx}: invalid {subj} value '{raw}'")
+
+        if not subjects:
+            errors.append(f"Row {idx}: no valid subject marks")
+            continue
+
+        doc = {
+            'name': name,
+            'standard': standard,
+            'school': row.get('school', ''),
+            'exam_type': row.get('exam_type', 'General') or 'General',
+            'gender': row.get('gender', ''),
+            'roll_number': '-',
+            'profile_picture': '',
+            'subjects': subjects,
+            'created_at': now,
+            'updated_at': now,
+        }
+        await db.students.insert_one(doc)
+        imported += 1
+
+    return {"imported": imported, "errors": errors}
 
 
 @api_router.get("/progress")

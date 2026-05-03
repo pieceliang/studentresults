@@ -1,17 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { getGradeByPct } from "@/utils/grading";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const gradeFromPct = (pct) => {
-  if (pct >= 90) return { grade: "A+", emoji: "🌟" };
-  if (pct >= 80) return { grade: "A", emoji: "⭐" };
-  if (pct >= 70) return { grade: "B+", emoji: "🎯" };
-  if (pct >= 60) return { grade: "B", emoji: "👍" };
-  if (pct >= 50) return { grade: "C", emoji: "📖" };
-  if (pct >= 40) return { grade: "D", emoji: "⚠️" };
-  return { grade: "F", emoji: "😰" };
+  const g = getGradeByPct(pct);
+  return { grade: g.grade, emoji: g.emoji };
 };
 
 export default function Dashboard() {
@@ -41,7 +37,7 @@ export default function Dashboard() {
       <div className="text-center py-10 bg-white rounded-3xl border-2 border-emerald-100 shadow-[0_8px_24px_rgba(167,243,208,0.4)] px-6">
         <div className="flex justify-center mb-4">
           <img
-            src="https://customer-assets.emergentagent.com/job_marks-manager-16/artifacts/36kuzbbs_VSS%20logo%20vertical_Black.png"
+            src="https://customer-assets.emergentagent.com/job_marks-manager-16/artifacts/kn6egpfc_11%20%282048px%29%20%281%29.png"
             alt="VSS Logo"
             className="h-20 w-20 object-contain bg-gray-900 rounded-2xl p-1"
           />
