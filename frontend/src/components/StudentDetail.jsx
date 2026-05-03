@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { ArrowLeft, Edit2, Trash2, Printer, Download } from "lucide-react";
+import { ArrowLeft, Edit2, Trash2, Printer, Download, X, Sparkles, MessageSquarePlus } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
@@ -9,8 +9,8 @@ import {
 import { toast } from "sonner";
 import StudentForm from "./StudentForm";
 import ProgressTracker from "./ProgressTracker";
-import { playDelete, playOpen, playSuccess } from "@/utils/sounds";
-import { getGradeInfo } from "@/utils/grading";
+import { playDelete, playOpen, playSuccess, playClick } from "@/utils/sounds";
+import { getGradeInfo, autoComment } from "@/utils/grading";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -21,6 +21,49 @@ export default function StudentDetail() {
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [commentEdit, setCommentEdit] = useState(null); // { index, draft }
+  const [savingComment, setSavingComment] = useState(false);
+
+  const openCommentEditor = (i) => {
+    playClick();
+    setCommentEdit({ index: i, draft: student.subjects[i]?.comment || "" });
+  };
+
+  const autoFillDraft = () => {
+    if (!commentEdit) return;
+    const s = student.subjects[commentEdit.index];
+    setCommentEdit({ ...commentEdit, draft: autoComment(s.marks, s.max_marks) });
+    playClick();
+  };
+
+  const saveComment = async () => {
+    if (!commentEdit || !student) return;
+    const nextSubjects = student.subjects.map((s, idx) =>
+      idx === commentEdit.index ? { ...s, comment: commentEdit.draft.trim() } : s
+    );
+    setSavingComment(true);
+    try {
+      const payload = {
+        name: student.name,
+        standard: student.standard,
+        exam_type: student.exam_type,
+        gender: student.gender,
+        school: student.school,
+        roll_number: student.roll_number || "-",
+        profile_picture: student.profile_picture,
+        subjects: nextSubjects,
+      };
+      await axios.put(`${API}/students/${id}`, payload);
+      playSuccess();
+      toast.success("Comment saved! 💬");
+      setCommentEdit(null);
+      fetchStudent();
+    } catch {
+      toast.error("Failed to save comment");
+    } finally {
+      setSavingComment(false);
+    }
+  };
 
   const fetchStudent = async () => {
     setLoading(true);
@@ -206,8 +249,10 @@ export default function StudentDetail() {
               return (
                 <div
                   key={i}
-                  className="bg-white border-2 border-emerald-100 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all print-card"
+                  onClick={() => openCommentEditor(i)}
+                  className="bg-white border-2 border-emerald-100 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-emerald-300 transition-all print-card cursor-pointer group relative"
                   data-testid={`subject-card-${i}`}
+                  title="Click to add or edit comment"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="font-black text-emerald-900 text-lg leading-tight">{subject.name}</h3>
@@ -229,12 +274,16 @@ export default function StudentDetail() {
                     </span>
                   </div>
                   <div className="text-right text-sm font-bold text-emerald-400 mt-1">{pct}%</div>
-                  {subject.comment && (
+                  {subject.comment ? (
                     <p
                       className="mt-2 text-xs italic text-emerald-600 leading-relaxed border-t border-emerald-50 pt-2"
                       data-testid={`subject-comment-${i}`}
                     >
                       💬 {subject.comment}
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-xs italic text-emerald-300 border-t border-emerald-50 pt-2 flex items-center gap-1 no-print">
+                      <MessageSquarePlus size={12} /> Click to add comment
                     </p>
                   )}
                 </div>
@@ -378,10 +427,6 @@ export default function StudentDetail() {
               <div className="font-bold text-emerald-700">Total Marks: {totalMarks} / {totalMax}</div>
               <div className="font-bold text-emerald-700">Average: {overallPct}%</div>
             </div>
-            <div className="text-right">
-              <div className="text-4xl font-black text-emerald-800">{overallInfo.grade}</div>
-              <div className="text-xs font-bold text-emerald-500 uppercase tracking-wide">Overall Grade</div>
-            </div>
           </div>
 
           {/* Signatures */}
@@ -439,6 +484,76 @@ export default function StudentDetail() {
             if (saved) fetchStudent();
           }}
         />
+      )}
+
+      {/* Per-subject Comment Editor */}
+      {commentEdit !== null && student.subjects[commentEdit.index] && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          data-testid="comment-editor-modal"
+        >
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-xl bounce-in">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-black text-emerald-900">
+                💬 Comment — {student.subjects[commentEdit.index].name}
+              </h3>
+              <button
+                onClick={() => { playClick(); setCommentEdit(null); }}
+                className="p-2 rounded-full hover:bg-emerald-100 transition-colors"
+                data-testid="close-comment-editor"
+              >
+                <X size={18} className="text-emerald-700" />
+              </button>
+            </div>
+
+            <div className="bg-emerald-50 rounded-2xl px-4 py-2 mb-4 flex items-center gap-3 text-sm">
+              <span className="font-bold text-emerald-800">
+                {student.subjects[commentEdit.index].marks} / {student.subjects[commentEdit.index].max_marks}
+              </span>
+              <span className="text-emerald-500">·</span>
+              <span className="font-bold text-emerald-700">
+                {getGradeInfo(student.subjects[commentEdit.index].marks, student.subjects[commentEdit.index].max_marks).grade} — {getGradeInfo(student.subjects[commentEdit.index].marks, student.subjects[commentEdit.index].max_marks).label}
+              </span>
+            </div>
+
+            <textarea
+              value={commentEdit.draft}
+              onChange={(e) => setCommentEdit({ ...commentEdit, draft: e.target.value })}
+              placeholder="Type a short comment for this subject..."
+              rows={4}
+              className="w-full bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl px-4 py-3 text-emerald-900 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/20 font-medium resize-none"
+              data-testid="comment-editor-textarea"
+              autoFocus
+            />
+
+            <button
+              type="button"
+              onClick={autoFillDraft}
+              className="mt-3 flex items-center gap-2 text-sm font-bold text-yellow-700 bg-yellow-100 px-4 py-2 rounded-full hover:bg-yellow-200 transition-colors"
+              data-testid="auto-fill-comment-btn"
+            >
+              <Sparkles size={14} /> Auto-fill from grade
+            </button>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => { playClick(); setCommentEdit(null); }}
+                className="flex-1 bg-emerald-100 text-emerald-800 font-bold py-3 rounded-full hover:bg-emerald-200 transition-colors"
+                data-testid="cancel-comment-btn"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveComment}
+                disabled={savingComment}
+                className="flex-1 bg-emerald-400 text-white font-bold py-3 rounded-full hover:bg-emerald-500 disabled:opacity-60 shadow-md transition-all"
+                data-testid="save-comment-btn"
+              >
+                {savingComment ? "Saving..." : "Save Comment"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

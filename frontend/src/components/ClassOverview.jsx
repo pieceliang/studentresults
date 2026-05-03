@@ -51,15 +51,11 @@ export default function ClassOverview() {
       .finally(() => setLoading(false));
   }, [selectedStandard, examFilter, schoolFilter]);
 
-  // Unique schools present in the current standard for the school filter dropdown
+  // Unique schools present overall for the school filter dropdown
   const [schoolOptions, setSchoolOptions] = useState([]);
   useEffect(() => {
-    if (!selectedStandard) { setSchoolOptions([]); return; }
-    axios.get(`${API}/students`, { params: { standard: selectedStandard } }).then((r) => {
-      const opts = Array.from(new Set(r.data.map((s) => s.school).filter(Boolean))).sort();
-      setSchoolOptions(opts);
-    });
-  }, [selectedStandard]);
+    axios.get(`${API}/schools`).then((r) => setSchoolOptions(r.data)).catch(() => {});
+  }, []);
 
   // Build ordered subject list: fixed first, then extras
   const allSubjects = [...new Set(students.flatMap((s) => s.subjects.map((sub) => sub.name)))];

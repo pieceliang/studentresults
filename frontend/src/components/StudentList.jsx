@@ -23,7 +23,9 @@ export default function StudentList() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStandard, setFilterStandard] = useState("");
+  const [filterSchool, setFilterSchool] = useState("");
   const [standards, setStandards] = useState([]);
+  const [schools, setSchools] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [editStudent, setEditStudent] = useState(null);
@@ -35,6 +37,7 @@ export default function StudentList() {
       const params = {};
       if (search) params.search = search;
       if (filterStandard) params.standard = filterStandard;
+      if (filterSchool) params.school = filterSchool;
       const r = await axios.get(`${API}/students`, { params });
       setStudents(r.data);
     } catch {
@@ -42,10 +45,11 @@ export default function StudentList() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterStandard]);
+  }, [search, filterStandard, filterSchool]);
 
   useEffect(() => {
     axios.get(`${API}/standards`).then((r) => setStandards(r.data)).catch(() => {});
+    axios.get(`${API}/schools`).then((r) => setSchools(r.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -68,6 +72,7 @@ export default function StudentList() {
   const handleExportCSV = () => {
     const params = new URLSearchParams();
     if (filterStandard) params.append("standard", filterStandard);
+    if (filterSchool) params.append("school", filterSchool);
     window.open(`${API}/students/export/csv?${params}`, "_blank");
   };
 
@@ -128,6 +133,17 @@ export default function StudentList() {
         >
           <option value="">All Standards</option>
           {standards.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select
+          value={filterSchool}
+          onChange={(e) => setFilterSchool(e.target.value)}
+          className="bg-white border-2 border-emerald-100 rounded-2xl h-12 px-4 text-emerald-900 focus:outline-none focus:border-emerald-400 font-medium cursor-pointer"
+          data-testid="filter-school"
+        >
+          <option value="">All Schools</option>
+          {schools.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>

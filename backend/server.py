@@ -152,10 +152,12 @@ async def get_stats():
 
 
 @api_router.get("/students/export/csv")
-async def export_csv(standard: Optional[str] = Query(None)):
+async def export_csv(standard: Optional[str] = Query(None), school: Optional[str] = Query(None)):
     query = {}
     if standard:
         query["standard"] = standard
+    if school:
+        query["school"] = school
     students = await db.students.find(query).sort("name", 1).to_list(1000)
 
     output = io.StringIO()
@@ -274,10 +276,17 @@ async def get_standards():
     return sorted(standards)
 
 
+@api_router.get("/schools")
+async def get_schools():
+    schools = await db.students.distinct("school")
+    return sorted([s for s in schools if s])
+
+
 @api_router.get("/students")
 async def list_students(
     search: Optional[str] = Query(None),
-    standard: Optional[str] = Query(None)
+    standard: Optional[str] = Query(None),
+    school: Optional[str] = Query(None)
 ):
     query = {}
     if search:
@@ -287,6 +296,8 @@ async def list_students(
         ]
     if standard:
         query["standard"] = standard
+    if school:
+        query["school"] = school
 
     students = await db.students.find(query).sort("created_at", -1).to_list(1000)
     return [StudentResponse.from_mongo(s) for s in students]
