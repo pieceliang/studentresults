@@ -25,23 +25,29 @@
 - `GET /api/students/{id}` - Get student detail
 - `PUT /api/students/{id}` - Update student
 - `DELETE /api/students/{id}` - Delete student
-- `GET /api/students/export/csv` - Export all students to CSV
+- `GET /api/students/export/csv` - Export all students to CSV (includes Exam Type column)
 - `GET /api/standards` - Get list of unique standards in DB
+
+### Student Data Model Fields
+- `name` - Student full name
+- `standard` - Class/standard label (free text with suggestions)
+- `exam_type` - General / Mid-term / Final / Monthly / Pre-test / Post-test
+- `profile_picture` - Base64 JPEG avatar (resized to 240px max)
+- `subjects` - Array of {name, marks, max_marks} — 5 fixed (BC/EN/BM/MM/SN) + custom extras
+- `roll_number` - Legacy field, always "-"
+- `created_at`, `updated_at`
 
 ### Frontend Components
 - **Navbar** - Logo + Dashboard + Students navigation links
 - **Dashboard** - Stats cards, top performers list, recently added students
-- **StudentList** - Searchable/filterable list with edit/delete/view actions + CSV export
-- **StudentForm** - Modal with name, standard, and 5 fixed subjects (BC/EN/BM/MM/SN)
-- **StudentDetail** - Full profile with subject cards, bar chart, print + CSV export
+- **StudentList** - Searchable/filterable list with profile pic avatar, exam type badge, edit/delete/view
+- **StudentForm** - Modal with: profile pic upload (camera button + canvas resize), name, standard, exam type pills, 5 fixed subjects (BC/EN/BM/MM/SN), Add Other Subject for extras
+- **StudentDetail** - Full profile with subject cards, bar chart, print + CSV export, print slip
 - **sounds.js** - Web Audio API sound effects (success, delete, open, click, error)
 
-### Sound Effects
-- `playSuccess()` - Ascending chime on add/save/update
-- `playDelete()` - Descending whoosh on delete
-- `playOpen()` - Soft pop on form open
-- `playClick()` - Light click on button presses
-- `playError()` - Error buzz on validation failure
+### Print Slip
+- Hidden on screen, visible when window.print() called
+- Shows: ResultsHub header, student photo + info, subjects table with marks/grade, overall summary, signature lines for teacher + parent
 
 ## Prioritized Backlog
 

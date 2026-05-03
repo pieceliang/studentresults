@@ -130,7 +130,7 @@ export default function StudentDetail() {
             </h1>
             <div className="flex items-center gap-2 flex-wrap mt-1">
               <span className="text-emerald-600 font-semibold text-lg">{student.standard}</span>
-              {student.exam_type && (
+              {student.exam_type && student.exam_type !== "General" && (
                 <span className="text-sm font-bold bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full" data-testid="exam-type-badge">
                   {student.exam_type}
                 </span>
