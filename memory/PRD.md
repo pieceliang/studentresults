@@ -4,88 +4,85 @@
 "I want a student result recorder"
 
 ## User Choices & Configuration
-- **Users**: Teachers/Admins and Students can view results
-- **Subjects**: Fixed 5 subjects: BC, EN, BM, MM, SN
-- **Fields**: Student name + Standard/Class (no roll number)
-- **Features**: Add/edit/delete results, search, filter, export CSV/Print
-- **Auth**: No login required (open access)
-- **Design**: Green color theme, cute/playful style (Nunito font, emerald palette)
+- **Users**: Teachers/Admins (no login). Students can view own results.
+- **Subjects**: Fixed 5 subjects (BC, EN, BM, MM, SN) + custom extras
+- **Fields**: name, standard, gender, school, exam_type, profile_picture, subjects[] with per-subject comment
+- **Features**: Add/edit/delete/search/filter, CSV export, CSV batch import, printable result slip, class overview, progress tracker
+- **Auth**: No login required
+- **Design**: Green emerald palette, cute style, Nunito font, sound effects
 
 ## Architecture
-- **Frontend**: React + Tailwind CSS + shadcn UI (port 3000)
-- **Backend**: FastAPI (port 8001)
-- **Database**: MongoDB via Motor (async)
+- **Frontend**: React + Tailwind CSS + shadcn UI + recharts (port 3000)
+- **Backend**: FastAPI + Motor async MongoDB (port 8001)
+- **Database**: MongoDB
 
-## What's Been Implemented (as of Feb 2026)
+## VSS Grading Rubric (custom)
+| % | Grade | Label |
+|---|-------|-------|
+| 82–100 | A | Excellent |
+| 66–81  | B | Credit |
+| 50–65  | C | Good |
+| 35–49  | D | Satisfactory |
+| 20–34  | E | Meets Minimum Requirement |
+| 0–19   | F | Does Not Meet Minimum Requirement |
 
-### Backend (server.py)
-- `GET /api/stats` - Dashboard stats
-- `GET /api/students` - List (search by name, filter by standard)
-- `POST /api/students` - Create student
-- `GET /api/students/{id}` - Get detail
-- `PUT /api/students/{id}` - Update
-- `DELETE /api/students/{id}` - Delete
-- `GET /api/students/export/csv` - Export CSV (includes Gender, School, Exam Type columns)
-- `GET /api/standards` - Unique standards list
-- `GET /api/progress?name=&school=` - All records for a student (for progress tracking)
+## Backend API (server.py)
+- `GET /api/stats` — dashboard stats
+- `GET /api/students` — list (search + standard filter)
+- `POST /api/students` — create (subjects now accept `comment`)
+- `GET /api/students/{id}` — detail
+- `PUT /api/students/{id}` — update
+- `DELETE /api/students/{id}` — delete
+- `GET /api/students/export/csv` — export (includes Comment column)
+- `GET /api/students/import/template` — downloadable CSV template
+- `POST /api/students/import` — multipart CSV batch import with {imported, errors}
+- `GET /api/standards` — unique standards list
+- `GET /api/progress?name=&school=` — records for a student for progress tracking
 
-### Student Data Model Fields
-- `name`, `standard`, `exam_type`, `gender`, `school`, `profile_picture`, `subjects[]`, `roll_number`="-"
+## Data Model (Subject)
+```
+{ name, marks, max_marks=100, comment: "" }
+```
 
-### Frontend Pages
-- **/** Dashboard — VSchool Smart Centre branding, stats, top performers, recent students
-- **/students** — Searchable list with profile pic, exam type badge, gender, school
-- **/students/:id** — Full detail with subject cards, bar chart, progress tracker, print slip
-- **/overview** — Class overview comparison table (all students in a standard side-by-side)
+## Frontend
+- **/** Dashboard — branded hero, stats, top performers, recent students
+- **/students** — Import CSV + Export CSV + Add Student, list with profile pic, grade badges
+- **/students/:id** — Subject cards (italic comment below), bar chart, progress tracker, print slip (with italic comment line below each subject)
+- **/overview** — Standard + Exam + **School** filter, color-coded comparison table
 
 ### Components
-- **Navbar** — VSS logo + "VSchool Smart Centre / Bandar Tek Kajang" + 3 nav links
-- **StudentForm** — Profile pic upload, Name, Standard, Gender (Male/Female), School dropdown, Exam Type pills, 5 fixed subjects + Add Other Subject
-- **ClassOverview** — Standard filter + Exam type filter, color-coded comparison table with Class Avg row
-- **ProgressTracker** — Line chart (recharts) showing subject improvement across exam types; auto-appears when ≥2 records with different exam_types exist for same student name
-- **PrintSlip** — VSchool branded result slip (hidden on screen, visible on print)
-- **sounds.js** — Web Audio API sounds (success, delete, open, click, error)
+- Navbar (new logo: kn6egpfc_11.png), Dashboard (new logo), StudentList, StudentForm, StudentDetail, ClassOverview, ProgressTracker, **BatchImport (new)**, sounds.js
+- utils/grading.js — shared VSS rubric (GRADE_SCALE, getGradeByPct, getGradeInfo, autoComment)
 
-### Schools configured
-- SJKC Yu Hua, SJKC Sin Ming, SJKC Bandar Kajang 2, Others
+## CHANGELOG
+### Feb 03, 2026 (iter-5)
+- New navbar/dashboard/print logo URL
+- Custom school text input when "Others" is selected
+- Custom exam type text input when "Others" is selected
+- Per-subject comments with 💬 toggle + ✨ auto-generate from VSS rubric
+- Replaced 90=A+ grade map with VSS rubric (82–100 A … 0–19 F)
+- School filter on Class Overview (auto-shows when schools exist for standard)
+- Batch import: CSV template download + /api/students/import endpoint + BatchImport modal
+- Fixed: Subject Pydantic model missing `comment` field (data was being silently dropped by Pydantic)
 
-### Student Data Model Fields
-- `name` - Student full name
-- `standard` - Class/standard label (free text with suggestions)
-- `exam_type` - General / Mid-term / Final / Monthly / Pre-test / Post-test
-- `profile_picture` - Base64 JPEG avatar (resized to 240px max)
-- `subjects` - Array of {name, marks, max_marks} — 5 fixed (BC/EN/BM/MM/SN) + custom extras
-- `roll_number` - Legacy field, always "-"
-- `created_at`, `updated_at`
-
-### Frontend Components
-- **Navbar** - Logo + Dashboard + Students navigation links
-- **Dashboard** - Stats cards, top performers list, recently added students
-- **StudentList** - Searchable/filterable list with profile pic avatar, exam type badge, edit/delete/view
-- **StudentForm** - Modal with: profile pic upload (camera button + canvas resize), name, standard, exam type pills, 5 fixed subjects (BC/EN/BM/MM/SN), Add Other Subject for extras
-- **StudentDetail** - Full profile with subject cards, bar chart, print + CSV export, print slip
-- **sounds.js** - Web Audio API sound effects (success, delete, open, click, error)
-
-### Print Slip
-- Hidden on screen, visible when window.print() called
-- Shows: ResultsHub header, student photo + info, subjects table with marks/grade, overall summary, signature lines for teacher + parent
+### Earlier
+- Core CRUD, printable slip, exam types, profile pics, VSS branding, gender & school, class overview, progress tracker chart, CSV export, sound effects
 
 ## Prioritized Backlog
-
-### P1 (Next Priority)
-- Student result report card PDF (print-friendly layout already present)
-- Bulk import via CSV upload
-- Exam type field (e.g., Mid-term, Final)
+### P1
+- Real PDF export (not just print-to-PDF)
+- Bulk edit/delete (select multiple, apply changes)
+- GET /api/schools endpoint so StudentForm can suggest beyond hardcoded list
 
 ### P2
-- Class-level analytics (compare students in same standard)
-- Date/semester field per result entry
-- Teacher notes per student
+- Date/semester field per exam entry (beyond exam_type string)
+- Class average, top/bottom deltas per subject on ClassOverview
+- Email result slips to parents (integration: Resend / SendGrid)
 
 ### P3
-- Password-protected admin section
-- Student login to view own results only
-- Email result cards to parents
+- Admin PIN or password to protect destructive actions
+- Student self-login to view own results only
+- Mobile offline mode (PWA)
 
 ## Test Credentials
-- No authentication required - open access
+N/A — no authentication
